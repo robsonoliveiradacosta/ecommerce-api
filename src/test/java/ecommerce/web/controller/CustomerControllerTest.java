@@ -42,12 +42,12 @@ class CustomerControllerTest {
 	@MockBean
 	CustomerRepository customerRepository;
 
-	String url = "/api/customers";
+	String url = "/api/customers/";
 
 	@Test
 	void testFindAll() throws Exception {
-		List<Customer> customers = List.of(new Customer("Robson", "95984354071"),
-				new Customer("Atreus", "89950434076"));
+		List<Customer> customers = List.of(new CustomerBuilder().build(),
+				new CustomerBuilder().withName("Atreus").withCpf("89950434076").build());
 
 		when(customerRepository.findAll()).thenReturn(customers);
 
@@ -56,11 +56,11 @@ class CustomerControllerTest {
 
 	@Test
 	void testFindById() throws Exception {
-		Customer customer = createCustomer();
+		Customer customer = new CustomerBuilder().withId(1L).build();
 
 		when(customerRepository.findById(anyLong())).thenReturn(Optional.of(customer));
 
-		mockMvc.perform(get(url + "/1")).andExpect(status().isOk())
+		mockMvc.perform(get(url.concat(customer.getId().toString()))).andExpect(status().isOk())
 				.andExpect(jsonPath("$.id", is(customer.getId().intValue())))
 				.andExpect(jsonPath("$.name", is(customer.getName())))
 				.andExpect(jsonPath("$.cpf", is(customer.getCpf())));
@@ -68,7 +68,7 @@ class CustomerControllerTest {
 
 	@Test
 	void testCreate() throws Exception {
-		Customer customer = createCustomer();
+		Customer customer = new CustomerBuilder().withId(1L).build();
 
 		when(customerRepository.save(any(Customer.class))).thenReturn(customer);
 
@@ -82,15 +82,15 @@ class CustomerControllerTest {
 
 	@Test
 	void testUpdate() throws Exception {
-		Customer customer = createCustomer();
-		Customer changedCustomer = createCustomer();
-		changedCustomer.setName("Robson XYZ");
+		Customer customer = new CustomerBuilder().withId(1L).build();
+		Customer changedCustomer = new CustomerBuilder().withId(1L).withName("Robson XYZ").build();
 
 		when(customerRepository.findById(anyLong())).thenReturn(Optional.of(customer));
 		when(customerRepository.save(any(Customer.class))).thenReturn(changedCustomer);
 
 		String json = new ObjectMapper().writeValueAsString(changedCustomer);
-		RequestBuilder requestBuilder = put(url + "/1").content(json).contentType(MediaType.APPLICATION_JSON);
+		RequestBuilder requestBuilder = put(url.concat(changedCustomer.getId().toString())).content(json)
+				.contentType(MediaType.APPLICATION_JSON);
 		mockMvc.perform(requestBuilder).andExpect(status().isOk())
 				.andExpect(jsonPath("$.id", is(changedCustomer.getId().intValue())))
 				.andExpect(jsonPath("$.name", is(changedCustomer.getName())))
@@ -99,19 +99,13 @@ class CustomerControllerTest {
 
 	@Test
 	void testRemove() throws Exception {
-		Customer customer = createCustomer();
+		Customer customer = new CustomerBuilder().withId(1L).build();
 
 		when(customerRepository.findById(anyLong())).thenReturn(Optional.of(customer));
 
-		mockMvc.perform(delete(url + "/1")).andExpect(status().isNoContent());
+		mockMvc.perform(delete(url.concat(customer.getId().toString()))).andExpect(status().isNoContent());
 
 		verify(customerRepository, times(1)).delete(customer);
-	}
-
-	private Customer createCustomer() {
-		Customer customer = new Customer("Robson", "95984354071");
-		customer.setId(1L);
-		return customer;
 	}
 
 }

@@ -25,14 +25,6 @@ public class Customer {
 	@Column(nullable = false, unique = true)
 	private String cpf;
 
-	public Customer() {
-	}
-
-	public Customer(String name, String cpf) {
-		this.name = name;
-		this.cpf = cpf;
-	}
-
 	public Long getId() {
 		return id;
 	}

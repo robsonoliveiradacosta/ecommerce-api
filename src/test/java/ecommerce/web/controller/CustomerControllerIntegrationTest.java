@@ -44,8 +44,8 @@ public class CustomerControllerIntegrationTest {
 	@Transactional
 	@Test
 	void testFindAll() throws Exception {
-		customerRepository.save(new Customer("Robson", "95984354071"));
-		customerRepository.save(new Customer("Atreus", "89950434076"));
+		customerRepository.save(new CustomerBuilder().build());
+		customerRepository.save(new CustomerBuilder().withName("Atreus").withCpf("89950434076").build());
 
 		mockMvc.perform(get(url)).andExpect(status().isOk())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
@@ -55,7 +55,7 @@ public class CustomerControllerIntegrationTest {
 	@Transactional
 	@Test
 	void testFindById() throws Exception {
-		Customer customer = customerRepository.save(new Customer("Robson", "95984354071"));
+		Customer customer = customerRepository.save(new CustomerBuilder().build());
 
 		mockMvc.perform(get(url + customer.getId())).andExpect(status().isOk())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
@@ -82,7 +82,7 @@ public class CustomerControllerIntegrationTest {
 	@Transactional
 	@Test
 	void testUpdate() throws Exception {
-		Customer customer = customerRepository.save(new Customer("Robson", "95984354071"));
+		Customer customer = customerRepository.save(new CustomerBuilder().build());
 		CustomerRequest customerRequest = new CustomerRequest();
 		customerRequest.setName("Robson XYZ");
 		customerRequest.setCpf("95984354071");
@@ -100,7 +100,7 @@ public class CustomerControllerIntegrationTest {
 	@Transactional
 	@Test
 	void testRemove() throws Exception {
-		Customer customer = customerRepository.save(new Customer("Robson", "95984354071"));
+		Customer customer = customerRepository.save(new CustomerBuilder().build());
 
 		mockMvc.perform(delete(url + customer.getId())).andExpect(status().isNoContent());
 	}
