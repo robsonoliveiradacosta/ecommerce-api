@@ -1,5 +1,6 @@
 package ecommerce.web.controller;
 
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -103,6 +104,33 @@ public class CustomerControllerIntegrationTest {
 		Customer customer = customerRepository.save(new CustomerBuilder().build());
 
 		mockMvc.perform(delete(url + customer.getId())).andExpect(status().isNoContent());
+	}
+
+	@Test
+	void testFindByIdNotFound() throws Exception {
+		int idNotFound = 1;
+		mockMvc.perform(get(url + idNotFound)).andExpect(status().isNotFound());
+	}
+
+	@Test
+	void testCreateWithBlankParameters() throws Exception {
+		CustomerRequest customerRequest = new CustomerRequest();
+		String json = new ObjectMapper().writeValueAsString(customerRequest);
+
+		RequestBuilder requestBuilder = post(url).content(json).contentType(MediaType.APPLICATION_JSON);
+		mockMvc.perform(requestBuilder).andExpect(status().isBadRequest()).andExpect(jsonPath("$.fields").isNotEmpty());
+	}
+
+	@Test
+	void testCreateWithInvalidCpf() throws Exception {
+		CustomerRequest customerRequest = new CustomerRequest();
+		customerRequest.setName("Robson");
+		customerRequest.setCpf("12345678901");
+		String json = new ObjectMapper().writeValueAsString(customerRequest);
+
+		RequestBuilder requestBuilder = post(url).content(json).contentType(MediaType.APPLICATION_JSON);
+		mockMvc.perform(requestBuilder).andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.fields[*].name", hasItem("cpf")));
 	}
 
 }

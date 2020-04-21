@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import ecommerce.domain.Category;
+import ecommerce.exception.ResourceNotFoundException;
 import ecommerce.repository.CategoryRepository;
 import ecommerce.web.contract.CategoryRequest;
 import ecommerce.web.contract.CategoryResponse;
@@ -42,7 +43,7 @@ public class CategoryController {
 
 	@GetMapping("/{id}")
 	public CategoryResponse findById(@PathVariable Long id) {
-		Category category = repository.findById(id).get();
+		Category category = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException());
 		return toResponse(category);
 	}
 
@@ -57,7 +58,7 @@ public class CategoryController {
 	@PutMapping("/{id}")
 	@Transactional
 	public CategoryResponse update(@PathVariable Long id, @RequestBody @Valid CategoryRequest categoryRequest) {
-		Category category = repository.findById(id).get();
+		Category category = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException());
 		modelMapper.map(categoryRequest, category);
 		return toResponse(repository.save(category));
 	}
@@ -66,7 +67,7 @@ public class CategoryController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@Transactional
 	public void remove(@PathVariable Long id) {
-		Category category = repository.findById(id).get();
+		Category category = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException());
 		repository.delete(category);
 	}
 

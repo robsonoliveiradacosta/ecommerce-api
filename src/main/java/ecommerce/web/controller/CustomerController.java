@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import ecommerce.domain.Customer;
+import ecommerce.exception.ResourceNotFoundException;
 import ecommerce.repository.CustomerRepository;
 import ecommerce.web.contract.CustomerRequest;
 import ecommerce.web.contract.CustomerResponse;
@@ -42,7 +43,7 @@ public class CustomerController {
 
 	@GetMapping("/{id}")
 	public CustomerResponse findById(@PathVariable Long id) {
-		Customer customer = repository.findById(id).get();
+		Customer customer = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException());
 		return toResponse(customer);
 	}
 
@@ -57,7 +58,7 @@ public class CustomerController {
 	@PutMapping("/{id}")
 	@Transactional
 	public CustomerResponse update(@PathVariable Long id, @RequestBody @Valid CustomerRequest customerRequest) {
-		Customer customer = repository.findById(id).get();
+		Customer customer = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException());
 		modelMapper.map(customerRequest, customer);
 		return toResponse(repository.save(customer));
 	}
@@ -66,7 +67,7 @@ public class CustomerController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@Transactional
 	public void remove(@PathVariable Long id) {
-		Customer customer = repository.findById(id).get();
+		Customer customer = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException());
 		repository.delete(customer);
 	}
 

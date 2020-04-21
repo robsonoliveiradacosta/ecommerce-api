@@ -1,5 +1,6 @@
 package ecommerce.web.controller;
 
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ecommerce.config.ModelMapperConfig;
 import ecommerce.domain.Customer;
+import ecommerce.exception.ResourceNotFoundException;
 import ecommerce.repository.CustomerRepository;
 
 @WebMvcTest(CustomerController.class)
@@ -106,6 +108,32 @@ class CustomerControllerTest {
 		mockMvc.perform(delete(url.concat(customer.getId().toString()))).andExpect(status().isNoContent());
 
 		verify(customerRepository, times(1)).delete(customer);
+	}
+
+	@Test
+	void testFindByIdNotFound() throws Exception {
+		when(customerRepository.findById(anyLong())).thenThrow(ResourceNotFoundException.class);
+
+		mockMvc.perform(get(url.concat("1"))).andExpect(status().isNotFound());
+	}
+
+	@Test
+	void testCreateWithBlankParameters() throws Exception {
+		Customer customer = new CustomerBuilder().withName("").withCpf("").build();
+		String json = new ObjectMapper().writeValueAsString(customer);
+
+		RequestBuilder requestBuilder = post(url).content(json).contentType(MediaType.APPLICATION_JSON);
+		mockMvc.perform(requestBuilder).andExpect(status().isBadRequest()).andExpect(jsonPath("$.fields", hasSize(3)));
+	}
+
+	@Test
+	void testCreateWithInvalidCpf() throws Exception {
+		Customer customer = new CustomerBuilder().withCpf("12345678901").build();
+		String json = new ObjectMapper().writeValueAsString(customer);
+
+		RequestBuilder requestBuilder = post(url).content(json).contentType(MediaType.APPLICATION_JSON);
+		mockMvc.perform(requestBuilder).andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.fields[*].name", hasItem("cpf")));
 	}
 
 }
