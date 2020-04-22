@@ -1,9 +1,12 @@
 package ecommerce.exceptionhandler;
 
 import java.time.OffsetDateTime;
-import java.util.Collections;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+@JsonInclude(Include.NON_NULL)
 public class ApiError {
 
 	private Integer status;
@@ -15,7 +18,6 @@ public class ApiError {
 		this.status = status;
 		this.message = message;
 		this.timestamp = timestamp;
-		this.fields = Collections.emptyList();
 	}
 
 	public ApiError(Integer status, String message, OffsetDateTime timestamp, List<Field> fields) {
