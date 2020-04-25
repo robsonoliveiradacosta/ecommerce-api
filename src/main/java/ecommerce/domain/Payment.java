@@ -1,22 +1,31 @@
 package ecommerce.domain;
 
 import javax.persistence.Column;
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.DiscriminatorType;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.validation.constraints.NotBlank;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.validation.constraints.NotNull;
 
+@DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.STRING)
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @Entity
-public class Category {
+public abstract class Payment {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@NotBlank
-	@Column(nullable = false)
-	private String name;
+	@NotNull
+	@Column(length = 30, nullable = false)
+	@Enumerated(EnumType.STRING)
+	private PaymentStatus status;
 
 	public Long getId() {
 		return id;
@@ -26,12 +35,12 @@ public class Category {
 		this.id = id;
 	}
 
-	public String getName() {
-		return name;
+	public PaymentStatus getStatus() {
+		return status;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setStatus(PaymentStatus status) {
+		this.status = status;
 	}
 
 	@Override
@@ -50,7 +59,7 @@ public class Category {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Category other = (Category) obj;
+		Payment other = (Payment) obj;
 		if (id == null) {
 			if (other.id != null)
 				return false;
