@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import javax.transaction.Transactional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -24,10 +25,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.RequestBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import ecommerce.domain.Customer;
 import ecommerce.repository.CustomerRepository;
 import ecommerce.web.contract.CustomerRequest;
+import ecommerce.web.controller.builder.CustomerBuilder;
+import ecommerce.web.controller.builder.CustomerRequestBuilder;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
@@ -35,12 +39,19 @@ import ecommerce.web.contract.CustomerRequest;
 public class CustomerControllerIntegrationTest {
 
 	@Autowired
-	private MockMvc mockMvc;
+	MockMvc mockMvc;
 
 	@Autowired
 	CustomerRepository customerRepository;
 
 	String url = "/api/customers/";
+	ObjectMapper objectMapper;
+
+	@BeforeEach
+	void beforeEach() {
+		objectMapper = new ObjectMapper();
+		objectMapper.registerModule(new JavaTimeModule());
+	}
 
 	@Transactional
 	@Test
@@ -68,26 +79,24 @@ public class CustomerControllerIntegrationTest {
 	@Transactional
 	@Test
 	void testCreate() throws Exception {
-		CustomerRequest customerRequest = new CustomerRequest();
-		customerRequest.setName("Robson");
-		customerRequest.setCpf("95984354071");
-		String json = new ObjectMapper().writeValueAsString(customerRequest);
+		CustomerRequest customerRequest = new CustomerRequestBuilder().build();
+		String json = objectMapper.writeValueAsString(customerRequest);
 
 		RequestBuilder requestBuilder = post(url).content(json).contentType(MediaType.APPLICATION_JSON);
 		mockMvc.perform(requestBuilder).andExpect(status().isCreated())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.id").isNotEmpty()).andExpect(jsonPath("$.name", is(customerRequest.getName())))
-				.andExpect(jsonPath("$.cpf", is(customerRequest.getCpf())));
+				.andExpect(jsonPath("$.cpf", is(customerRequest.getCpf())))
+				.andExpect(jsonPath("$.sex", is(customerRequest.getSex().toString())))
+				.andExpect(jsonPath("$.birth", is(customerRequest.getBirth().toString())));
 	}
 
 	@Transactional
 	@Test
 	void testUpdate() throws Exception {
 		Customer customer = customerRepository.save(new CustomerBuilder().build());
-		CustomerRequest customerRequest = new CustomerRequest();
-		customerRequest.setName("Robson XYZ");
-		customerRequest.setCpf("95984354071");
-		String json = new ObjectMapper().writeValueAsString(customerRequest);
+		CustomerRequest customerRequest = new CustomerRequestBuilder().withName("Robson XYZ").build();
+		String json = objectMapper.writeValueAsString(customerRequest);
 
 		RequestBuilder requestBuilder = put(url + customer.getId()).content(json)
 				.contentType(MediaType.APPLICATION_JSON);
@@ -95,7 +104,9 @@ public class CustomerControllerIntegrationTest {
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.id", is(customer.getId().intValue())))
 				.andExpect(jsonPath("$.name", is(customerRequest.getName())))
-				.andExpect(jsonPath("$.cpf", is(customerRequest.getCpf())));
+				.andExpect(jsonPath("$.cpf", is(customerRequest.getCpf())))
+				.andExpect(jsonPath("$.sex", is(customerRequest.getSex().toString())))
+				.andExpect(jsonPath("$.birth", is(customerRequest.getBirth().toString())));
 	}
 
 	@Transactional
@@ -114,8 +125,8 @@ public class CustomerControllerIntegrationTest {
 
 	@Test
 	void testCreateWithBlankParameters() throws Exception {
-		CustomerRequest customerRequest = new CustomerRequest();
-		String json = new ObjectMapper().writeValueAsString(customerRequest);
+		CustomerRequest customerRequest = new CustomerRequestBuilder().withName("").withCpf("").build();
+		String json = objectMapper.writeValueAsString(customerRequest);
 
 		RequestBuilder requestBuilder = post(url).content(json).contentType(MediaType.APPLICATION_JSON);
 		mockMvc.perform(requestBuilder).andExpect(status().isBadRequest()).andExpect(jsonPath("$.fields").isNotEmpty());
@@ -123,10 +134,8 @@ public class CustomerControllerIntegrationTest {
 
 	@Test
 	void testCreateWithInvalidCpf() throws Exception {
-		CustomerRequest customerRequest = new CustomerRequest();
-		customerRequest.setName("Robson");
-		customerRequest.setCpf("12345678901");
-		String json = new ObjectMapper().writeValueAsString(customerRequest);
+		CustomerRequest customerRequest = new CustomerRequestBuilder().withCpf("12345678901").build();
+		String json = objectMapper.writeValueAsString(customerRequest);
 
 		RequestBuilder requestBuilder = post(url).content(json).contentType(MediaType.APPLICATION_JSON);
 		mockMvc.perform(requestBuilder).andExpect(status().isBadRequest())

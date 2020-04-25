@@ -18,6 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -28,11 +29,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.RequestBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import ecommerce.config.ModelMapperConfig;
 import ecommerce.domain.Customer;
 import ecommerce.exception.ResourceNotFoundException;
 import ecommerce.repository.CustomerRepository;
+import ecommerce.web.controller.builder.CustomerBuilder;
 
 @WebMvcTest(CustomerController.class)
 @Import(ModelMapperConfig.class)
@@ -45,6 +48,13 @@ class CustomerControllerTest {
 	CustomerRepository customerRepository;
 
 	String url = "/api/customers/";
+	ObjectMapper objectMapper;
+
+	@BeforeEach
+	void beforeEach() {
+		objectMapper = new ObjectMapper();
+		objectMapper.registerModule(new JavaTimeModule());
+	}
 
 	@Test
 	void testFindAll() throws Exception {
@@ -74,12 +84,14 @@ class CustomerControllerTest {
 
 		when(customerRepository.save(any(Customer.class))).thenReturn(customer);
 
-		String json = new ObjectMapper().writeValueAsString(customer);
+		String json = objectMapper.writeValueAsString(customer);
 		RequestBuilder requestBuilder = post(url).content(json).contentType(MediaType.APPLICATION_JSON);
 		mockMvc.perform(requestBuilder).andExpect(status().isCreated())
 				.andExpect(jsonPath("$.id", is(customer.getId().intValue())))
 				.andExpect(jsonPath("$.name", is(customer.getName())))
-				.andExpect(jsonPath("$.cpf", is(customer.getCpf())));
+				.andExpect(jsonPath("$.cpf", is(customer.getCpf()))).andExpect(jsonPath("$.cpf", is(customer.getCpf())))
+				.andExpect(jsonPath("$.sex", is(customer.getSex().toString())))
+				.andExpect(jsonPath("$.birth", is(customer.getBirth().toString())));
 	}
 
 	@Test
@@ -90,13 +102,15 @@ class CustomerControllerTest {
 		when(customerRepository.findById(anyLong())).thenReturn(Optional.of(customer));
 		when(customerRepository.save(any(Customer.class))).thenReturn(changedCustomer);
 
-		String json = new ObjectMapper().writeValueAsString(changedCustomer);
+		String json = objectMapper.writeValueAsString(changedCustomer);
 		RequestBuilder requestBuilder = put(url.concat(changedCustomer.getId().toString())).content(json)
 				.contentType(MediaType.APPLICATION_JSON);
 		mockMvc.perform(requestBuilder).andExpect(status().isOk())
 				.andExpect(jsonPath("$.id", is(changedCustomer.getId().intValue())))
 				.andExpect(jsonPath("$.name", is(changedCustomer.getName())))
-				.andExpect(jsonPath("$.cpf", is(changedCustomer.getCpf())));
+				.andExpect(jsonPath("$.cpf", is(changedCustomer.getCpf())))
+				.andExpect(jsonPath("$.sex", is(changedCustomer.getSex().toString())))
+				.andExpect(jsonPath("$.birth", is(changedCustomer.getBirth().toString())));
 	}
 
 	@Test
@@ -120,7 +134,7 @@ class CustomerControllerTest {
 	@Test
 	void testCreateWithBlankParameters() throws Exception {
 		Customer customer = new CustomerBuilder().withName("").withCpf("").build();
-		String json = new ObjectMapper().writeValueAsString(customer);
+		String json = objectMapper.writeValueAsString(customer);
 
 		RequestBuilder requestBuilder = post(url).content(json).contentType(MediaType.APPLICATION_JSON);
 		mockMvc.perform(requestBuilder).andExpect(status().isBadRequest()).andExpect(jsonPath("$.fields", hasSize(3)));
@@ -129,7 +143,7 @@ class CustomerControllerTest {
 	@Test
 	void testCreateWithInvalidCpf() throws Exception {
 		Customer customer = new CustomerBuilder().withCpf("12345678901").build();
-		String json = new ObjectMapper().writeValueAsString(customer);
+		String json = objectMapper.writeValueAsString(customer);
 
 		RequestBuilder requestBuilder = post(url).content(json).contentType(MediaType.APPLICATION_JSON);
 		mockMvc.perform(requestBuilder).andExpect(status().isBadRequest())
