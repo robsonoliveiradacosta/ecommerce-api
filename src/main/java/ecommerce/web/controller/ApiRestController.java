@@ -59,7 +59,7 @@ public class ApiRestController<T, REQUEST, RESPONSE> {
 	public RESPONSE update(@PathVariable Long id, @Valid @RequestBody REQUEST request) {
 		T entity = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException());
 		modelMapper.map(request, entity);
-		return toResponse(repository.save(entity));
+		return toResponse(repository.saveAndFlush(entity));
 	}
 
 	@DeleteMapping("/{id}")

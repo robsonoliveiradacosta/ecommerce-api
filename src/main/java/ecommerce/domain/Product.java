@@ -11,11 +11,11 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
-import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.PastOrPresent;
 import javax.validation.constraints.Positive;
 
 @Entity
@@ -29,14 +29,13 @@ public class Product {
 	@Column(length = 100, nullable = false)
 	private String name;
 
-	@Lob
 	private String description;
 
+	@NotNull
 	@Positive
 	private BigDecimal price;
 
-	@Lob
-	private byte[] photo;
+	private String photo;
 
 	@NotNull
 	@Column(nullable = false)
@@ -46,12 +45,9 @@ public class Product {
 	@JoinTable(name = "product_category", joinColumns = @JoinColumn(name = "product_id", nullable = false), inverseJoinColumns = @JoinColumn(name = "category_id", nullable = false))
 	private Set<Category> categories;
 
-	@PastOrPresent
-	@NotNull
 	@Column(updatable = false, nullable = false)
 	private OffsetDateTime createdAt;
 
-	@PastOrPresent
 	@Column(insertable = false)
 	private OffsetDateTime updatedAt;
 
@@ -87,11 +83,11 @@ public class Product {
 		this.price = price;
 	}
 
-	public byte[] getPhoto() {
+	public String getPhoto() {
 		return photo;
 	}
 
-	public void setPhoto(byte[] photo) {
+	public void setPhoto(String photo) {
 		this.photo = photo;
 	}
 
@@ -150,6 +146,16 @@ public class Product {
 		} else if (!id.equals(other.id))
 			return false;
 		return true;
+	}
+
+	@PrePersist
+	private void prePersist() {
+		this.createdAt = OffsetDateTime.now();
+	}
+
+	@PreUpdate
+	private void preUpdate() {
+		this.updatedAt = OffsetDateTime.now();
 	}
 
 }
