@@ -1,5 +1,6 @@
 package ecommerce.web.controller;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,10 +19,13 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import ecommerce.domain.Product;
+import ecommerce.exception.FileException;
 import ecommerce.exception.ResourceNotFoundException;
 import ecommerce.repository.ProductRepository;
+import ecommerce.service.storage.PhotoStorageService;
 import ecommerce.web.contract.request.ProductRequest;
 import ecommerce.web.contract.response.ProductResponse;
 
@@ -34,6 +38,9 @@ public class ProductController {
 
 	@Autowired
 	private ProductRepository repository;
+
+	@Autowired
+	private PhotoStorageService photoStorageService;
 
 	@GetMapping
 	public List<ProductResponse> findAll() {
@@ -52,8 +59,10 @@ public class ProductController {
 	public ProductResponse create(@Valid ProductRequest productRequest) {
 		Product product = modelMapper.map(productRequest, Product.class);
 		if (productRequest.hasFile()) {
-			product.setPhoto("http://res.cloudinary.com/demo/image/upload/sample.jpg");
+			byte[] file = getBytes(productRequest.getFile());
+			product.setPhoto(photoStorageService.upload(file));
 		}
+		product.setCategories(productRequest.categories());
 		return toResponse(repository.save(product));
 	}
 
@@ -63,8 +72,11 @@ public class ProductController {
 		Product product = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException());
 		modelMapper.map(productRequest, product);
 		if (productRequest.hasFile()) {
-			product.setPhoto("http://res.cloudinary.com/demo/image/upload/w_150,h_100,c_fill/sample.jpg");
+			photoStorageService.delete(product.getPhoto());
+			byte[] file = getBytes(productRequest.getFile());
+			product.setPhoto(photoStorageService.upload(file));
 		}
+		product.setCategories(productRequest.categories());
 		return toResponse(repository.save(product));
 	}
 
@@ -78,6 +90,14 @@ public class ProductController {
 
 	private ProductResponse toResponse(Product product) {
 		return modelMapper.map(product, ProductResponse.class);
+	}
+
+	private byte[] getBytes(MultipartFile file) {
+		try {
+			return file.getBytes();
+		} catch (IOException e) {
+			throw new FileException();
+		}
 	}
 
 }

@@ -1,8 +1,11 @@
 package ecommerce.web.contract.request;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -28,7 +31,7 @@ public class ProductRequest {
 	@NotNull
 	private Boolean active;
 
-	private Set<Category> categories;
+	private Long[] categories;
 
 	public String getName() {
 		return name;
@@ -70,16 +73,23 @@ public class ProductRequest {
 		this.active = active;
 	}
 
-	public Set<Category> getCategories() {
+	public Long[] getCategories() {
 		return categories;
 	}
 
-	public void setCategories(Set<Category> categories) {
+	public void setCategories(Long[] categories) {
 		this.categories = categories;
 	}
 
 	public boolean hasFile() {
 		return Objects.nonNull(file) && file.getSize() > 0;
+	}
+
+	public Set<Category> categories() {
+		if (Objects.isNull(categories)) {
+			return Collections.emptySet();
+		}
+		return Stream.of(categories).map(id -> new Category(id)).collect(Collectors.toSet());
 	}
 
 }

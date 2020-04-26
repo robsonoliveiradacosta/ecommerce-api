@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import ecommerce.exception.FileException;
 import ecommerce.exception.ResourceNotFoundException;
 
 @RestControllerAdvice
@@ -65,6 +66,13 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 	private ResponseEntity<ApiError> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
 		ApiError apiError = new ApiError(HttpStatus.NOT_FOUND.value(), ex.getMessage(), OffsetDateTime.now());
 		return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
+	}
+
+	@ExceptionHandler(FileException.class)
+	private ResponseEntity<ApiError> handleFileException(FileException ex, WebRequest request) {
+		ApiError apiError = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getMessage(),
+				OffsetDateTime.now());
+		return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
 }
