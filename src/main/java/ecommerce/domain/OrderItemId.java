@@ -11,24 +11,24 @@ public class OrderItemId implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Column(name = "order_id")
-	private Integer orderId;
+	private Long orderId;
 
 	@Column(name = "product_id")
-	private Integer productId;
+	private Long productId;
 
-	public Integer getOrderId() {
+	public long getOrderId() {
 		return orderId;
 	}
 
-	public void setOrderId(Integer orderId) {
+	public void setOrderId(Long orderId) {
 		this.orderId = orderId;
 	}
 
-	public Integer getProductId() {
+	public Long getProductId() {
 		return productId;
 	}
 
-	public void setProductId(Integer productId) {
+	public void setProductId(Long productId) {
 		this.productId = productId;
 	}
 

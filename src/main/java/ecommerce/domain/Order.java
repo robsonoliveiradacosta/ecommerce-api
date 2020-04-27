@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -14,6 +15,8 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -33,7 +36,7 @@ public class Order {
 	private Customer customer;
 
 	@NotEmpty
-	@OneToMany(mappedBy = "order")
+	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
 	private Set<OrderItem> itens;
 
 	@NotNull
@@ -47,11 +50,11 @@ public class Order {
 	private OrderStatus status;
 
 	@NotNull
-	@OneToOne(optional = false)
+	@OneToOne(optional = false, cascade = CascadeType.ALL)
 	private Payment payment;
 
 	@NotNull
-	@OneToOne(optional = false)
+	@OneToOne(optional = false, cascade = CascadeType.ALL)
 	private Address address;
 
 	@PastOrPresent
@@ -169,6 +172,16 @@ public class Order {
 		} else if (!id.equals(other.id))
 			return false;
 		return true;
+	}
+
+	@PrePersist
+	private void prePersist() {
+		this.createdAt = OffsetDateTime.now();
+	}
+
+	@PreUpdate
+	private void preUpdate() {
+		this.updatedAt = OffsetDateTime.now();
 	}
 
 }

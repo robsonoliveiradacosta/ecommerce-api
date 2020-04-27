@@ -1,7 +1,6 @@
 package ecommerce.domain;
 
 import java.time.LocalDate;
-import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -10,7 +9,6 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotBlank;
@@ -43,9 +41,6 @@ public class Customer {
 
 	@Past
 	private LocalDate birth;
-
-	@OneToMany(mappedBy = "customer")
-	private Set<Order> orders;
 
 	public Long getId() {
 		return id;
@@ -85,14 +80,6 @@ public class Customer {
 
 	public void setBirth(LocalDate birth) {
 		this.birth = birth;
-	}
-
-	public Set<Order> getOrders() {
-		return orders;
-	}
-
-	public void setOrders(Set<Order> orders) {
-		this.orders = orders;
 	}
 
 	@Override

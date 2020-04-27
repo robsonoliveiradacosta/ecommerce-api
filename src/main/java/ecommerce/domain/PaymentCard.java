@@ -3,13 +3,13 @@ package ecommerce.domain;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotBlank;
 
 @DiscriminatorValue("cartao")
 @Entity
 public class PaymentCard extends Payment {
 
-	@NotEmpty
+	@NotBlank
 	@Column(name = "card_number", length = 50)
 	private String cardNumber;
 
